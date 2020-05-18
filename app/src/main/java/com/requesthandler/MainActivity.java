@@ -4,11 +4,17 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.app.ProgressDialog;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -20,15 +26,35 @@ import org.json.JSONObject;
 
 public class MainActivity extends AppCompatActivity {
 
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        //new RequestAsyncGet().execute();
-        new RequestAsyncPost().execute();
+        Button httpclientTest = findViewById(R.id.httpclientTest);
 
+        httpclientTest.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                //new RequestAsyncGet().execute();
+                if(isOnline(MainActivity.this))
+                    new RequestAsyncPost().execute();
+                else
+                    showAlertMessage("Uyarı" ,"İnternet bağlantınızı aktif hale getiriniz!" , "Tamam");
+            }
+        });
     }
+
+    private BroadcastReceiver receiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (!isOnline(MainActivity.this)) {
+                showAlertMessage("Uyarı" ,"İnternet bağlantınızı aktif hale getiriniz!" , "Tamam");
+            }
+        }
+    };
 
     public class RequestAsyncPost extends AsyncTask<String,String,String> {
 
@@ -120,6 +146,14 @@ public class MainActivity extends AppCompatActivity {
                     }
                 });
         alertMessage.show();
+    }
+
+    public boolean isOnline(Context context) {
+
+        ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo netInfo = cm.getActiveNetworkInfo();
+        //should check null because in airplane mode it will be null
+        return (netInfo != null && netInfo.isConnected());
     }
 
     public void logLargeString(String str, String staticVal) {
